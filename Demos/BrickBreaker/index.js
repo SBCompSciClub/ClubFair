@@ -87,6 +87,12 @@ class Canvas
         this.setColor(color);
         this.Device.fillRect(location.X, location.Y, size.X, size.Y);
     }
+    drawString(location, string, font, color)
+    {
+        this.setColor(color);
+        this.Device.font = font;
+        this.Device.fillText(string, location.X, location.Y);
+    }
     setColor(color)
     {
         this.Device.fillStyle = "rgba(" + color.R + ", " + color.G + ", " + color.B + ", " + (color.A / 255) + ")";
@@ -95,7 +101,7 @@ class Canvas
 }
 class Ball
 {
-    constructor(location, radius, color, direction, speed)
+    constructor(location, radius, color, direction, speed, onLost)
     {
         this.location = location;
         this.radius = radius;
@@ -103,6 +109,7 @@ class Ball
         this.direction = direction;
         this.speed = speed;
         this.velocity = new Point(0, 0);
+        this.onLost = onLost;
     }
     forward()
     {
@@ -130,12 +137,7 @@ class Ball
         }
         if (this.location.Y >= window.innerHeight)
         {
-            //this.velocity.Y *= -0.9;
-            if (this.velocity.X != 0)
-            {
-                //this.velocity.X *= 0.9;
-            }
-            //this.location.Y = window.innerHeight - 1;
+            this.onLost();
         }
         if (Math.abs(this.velocity.X) > 10)
         {
@@ -221,10 +223,6 @@ class Brick
                 }
             }
         }
-        if (bLoc.Y >= window.innerHeight + pSiz.Y)
-        {
-            // Dispatch Event
-        }
         return false;
     }
     render(canvas)
@@ -241,37 +239,65 @@ let MouseLocation = new Point(0, 0);
 let PreviousMouseLocation = new Point(0, 0);
 let DeltaMouseLocation = new Point(0, 0);
 let previousLoc = [];
+let maxScore = 0;
+let mode = 3;
+let maxLives = 5;
+let lives = maxLives;
 function entry()
 {
     let canvasObject = new Canvas("renderer", (canvas) =>
     {
         render(canvas);
     });
-    mainball = new Ball(new Point(window.innerWidth / 2, 1), 10, new Color(0, 0, 0), 0, 1);
+    mainball = new Ball(new Point(window.innerWidth / 2, 1), 10, new Color(255, 255, 255), 0, 1, () =>
+    {
+        lives--;
+        mainball.location = new Point(window.innerWidth / 2, 1);
+        mainball.velocity = new Point(0, 0);
+    });
     mainball.velocity = new Point(0, 0);
     let paddleHeight = 20;
     let paddlePadding = 0;
-    paddle = new Brick(new Point(0, window.innerHeight - (paddleHeight / 2) - paddlePadding), new Point(250, paddleHeight), new Color(255, 0, 0));
+    paddle = new Brick(new Point(0, window.innerHeight - (paddleHeight / 2) - paddlePadding), new Point(150, paddleHeight), new Color(0, 100, 200));
     paddle.moving = true;
-    for (let j = 0; j < 5; j++)
+    for (let j = 1; j < 10; j++)
     {
-        for (let i = 1; i < 5; i++)
+        for (let i = 1; i < 10; i++)
         {
-            bricks.push(new Brick(new Point((window.innerWidth / 2) - (135 * i) - 10, 300 + (j * 55)), new Point(130, 50), new Color(0, 0, 0)));
-            bricks.push(new Brick(new Point((window.innerWidth / 2) + (135 * i) + 10, 300 + (j * 55)), new Point(130, 50), new Color(0, 0, 0)));
+            bricks.push(new Brick(new Point((window.innerWidth / 2) - (55 * i) - 10, 50 + (j * 55)), new Point(50, 50), new Color(i + j * 10, j + i * 20 + 10, i * 10)));
+            bricks.push(new Brick(new Point((window.innerWidth / 2) + (55 * i) + 10, 50 + (j * 55)), new Point(50, 50), new Color(i + j * 10, j + i * 20 + 10, i * 10)));
         }
     }    
-    window.addEventListener("mousemove", (e) =>
+    maxScore = bricks.length;
+    console.log(maxScore);
+    canvasObject._canvas.addEventListener("mousemove", (e) =>
     {
-        paddle.location.X = e.offsetX;
         MouseLocation = new Point(e.offsetX, e.offsetY);
         DeltaMouseLocation = MouseLocation.sub(PreviousMouseLocation);
         PreviousMouseLocation = new Point(MouseLocation.X, MouseLocation.Y);
     });
+    window.addEventListener("keydown", (e) =>
+    {
+        if (mode != 0)
+        {
+            mode = 0;
+            lives = maxLives;
+            bricks = [];
+            for (let j = 1; j < 10; j++)
+            {
+                for (let i = 1; i < 10; i++)
+                {
+                    bricks.push(new Brick(new Point((window.innerWidth / 2) - (55 * i) - 10, 50 + (j * 55)), new Point(50, 50), new Color(i + j * 10, j + i * 20 + 10, i * 10)));
+                    bricks.push(new Brick(new Point((window.innerWidth / 2) + (55 * i) + 10, 50 + (j * 55)), new Point(50, 50), new Color(i + j * 10, j + i * 20 + 10, i * 10)));
+                }
+            }    
+            maxScore = bricks.length;
+        }    
+    });
     window.addEventListener("resize", () =>
     {
         paddle.location.Y = window.innerHeight - (paddleHeight / 2) - paddlePadding;
-    })
+    });
     let mainLoop = () =>
     {
         requestAnimationFrame(mainLoop);
@@ -288,27 +314,43 @@ function entry()
 }
 function update()
 {
-    mainball.velocity.Y += gravity;
-    mainball.move();
-    previousLoc.push(mainball.location);
-    paddle.collide(mainball, DeltaMouseLocation.X);
-    for (let i = bricks.length - 1; i >= 0; i--)
+    if (lives <= 0)
     {
-        if (bricks[i].collide(mainball, 0))
+        mode = 1;
+    }    
+    else if (bricks.length > 0)
+    {
+        if (mode === 0)
         {
-            bricks.splice(i, 1);
+            paddle.location.X = MouseLocation.X;
+            mainball.velocity.Y += gravity;
+            mainball.move();
+            previousLoc.push(mainball.location);
+            paddle.collide(mainball, DeltaMouseLocation.X);
+            for (let i = bricks.length - 1; i >= 0; i--)
+            {
+                if (bricks[i].collide(mainball, 0))
+                {
+                    bricks.splice(i, 1);
+                }
+            }
         }    
+    }
+    else 
+    {
+        mode = 2;
     }    
 }
 function render(canvas)
 {
+    canvas.fillRectangle(new Point(0, 0), new Point(window.innerWidth, window.innerHeight), new Color(0, 0, 0));
     for (let i = bricks.length - 1; i >= 0; i--)
     {
         bricks[i].render(canvas);
     }
     for (let i = 0; i < previousLoc.length; i++)
     {
-        canvas.drawCircle(previousLoc[i], 2, new Color(0, 0, 0));
+        canvas.fillCircle(previousLoc[i], 2, new Color(i, i, i));
     }
     if (previousLoc.length > 100)
     {
@@ -316,4 +358,24 @@ function render(canvas)
     }
     mainball.render(canvas);
     paddle.render(canvas);
+    canvas.drawString(new Point(0, 20), "Lives: " + lives, "20px Tahoma", new Color(200, 100, 000));
+    canvas.drawString(new Point(0, 40), "Score: " + (maxScore - bricks.length), "20px Tahoma", new Color(100, 200, 100));
+    if (mode === 1)
+    {
+        canvas.fillRectangle(new Point(0, 0), new Point(window.innerWidth, window.innerHeight), new Color(255, 0, 0, 100));
+        canvas.drawString(new Point((window.innerWidth / 2) - 250, 100), "You Lost!", "100px Consolas", new Color(255, 0, 0));
+        canvas.drawString(new Point((window.innerWidth / 2) - 240, 150), "< Press Any Key To Restart >", "30px Consolas", new Color(255, 100, 0));
+    }    
+    else if (mode === 2)
+    {
+        canvas.fillRectangle(new Point(0, 0), new Point(window.innerWidth, window.innerHeight), new Color(0, 255, 0, 100));
+        canvas.drawString(new Point((window.innerWidth / 2) - 215, 100), "You Won!", "100px Consolas", new Color(0, 255, 0));
+        canvas.drawString(new Point((window.innerWidth / 2) - 240, 150), "< Press Any Key To Restart >", "30px Consolas", new Color(0, 255, 100));
+    }    
+    else if (mode === 3)
+    {
+        canvas.fillRectangle(new Point(0, 0), new Point(window.innerWidth, window.innerHeight), new Color(255, 255, 0, 100));
+        canvas.drawString(new Point((window.innerWidth / 2) - 140, 100), "Begin", "100px Consolas", new Color(255, 255, 0));
+        canvas.drawString(new Point((window.innerWidth / 2) - 215, 150), "< Press Any Key To Start >", "30px Consolas", new Color(255, 255, 100));
+    }    
 }
