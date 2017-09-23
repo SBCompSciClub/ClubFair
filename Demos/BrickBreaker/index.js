@@ -130,12 +130,12 @@ class Ball
         }
         if (this.location.Y >= window.innerHeight)
         {
-            this.velocity.Y *= -0.9;
+            //this.velocity.Y *= -0.9;
             if (this.velocity.X != 0)
             {
-                this.velocity.X *= 0.9;
+                //this.velocity.X *= 0.9;
             }
-            this.location.Y = window.innerHeight - 1;
+            //this.location.Y = window.innerHeight - 1;
         }
         if (Math.abs(this.velocity.X) > 10)
         {
@@ -147,13 +147,14 @@ class Ball
         canvas.fillCircle(this.location, this.radius, this.color);
     }
 }
-class Paddle
+class Brick
 {
     constructor(location, size, color)
     {
         this.location = location;
         this.size = size;
         this.color = color;
+        this.moving = false;
     }
     collide(ball, forceX)
     {
@@ -161,17 +162,61 @@ class Paddle
         let bSiz = ball.radius;
         let pLoc = this.location;
         let pSiz = this.size;
-        if (bLoc.Y + bSiz >= pLoc.Y - (pSiz.Y / 2))
+        if (!this.moving)
         {
-            if (bLoc.Y - bSiz <= pLoc.Y + (pSiz.Y / 2))
+            if (bLoc.Y + bSiz >= pLoc.Y - (pSiz.Y / 2))
             {
-                if (bLoc.X + bSiz >= pLoc.X - (pSiz.X / 2))
+                if (bLoc.Y - bSiz <= pLoc.Y + (pSiz.Y / 2))
                 {
-                    if (bLoc.X <= pLoc.X + (pSiz.X / 2))
+                    let good = false;
+                    if (bLoc.X + (bSiz) - 10 >= pLoc.X - (pSiz.X / 2))
                     {
-                        ball.velocity.Y *= -1;
-                        ball.location.Y = pLoc.Y - (pSiz.Y / 2) - bSiz - 1;
-                        ball.velocity.X += forceX;
+                        if (bLoc.X - (bSiz) + 10 <= pLoc.X + (pSiz.X / 2))
+                        {
+                            ball.velocity.Y *= -1;
+                            ball.velocity.X += forceX;
+                            good = true;
+                            return true;
+                        }
+                    }
+                    if (!good)
+                    {
+                        if (bLoc.X + bSiz >= pLoc.X - (pSiz.X / 2))
+                        {
+                            if (bLoc.X - bSiz <= pLoc.X + (pSiz.X / 2))
+                            {
+                                if (!this.moving)
+                                {
+                                    ball.velocity.X *= -1;
+                                    return true;
+                                }
+                                else 
+                                {
+                                    ball.velocity.Y *= -1;
+                                    ball.velocity.X += forceX;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (bLoc.Y + bSiz >= pLoc.Y - (pSiz.Y / 2))
+            {
+                if (bLoc.Y - bSiz <= pLoc.Y + (pSiz.Y / 2))
+                {
+                    if (bLoc.X + (bSiz) >= pLoc.X - (pSiz.X / 2))
+                    {
+                        if (bLoc.X - (bSiz) <= pLoc.X + (pSiz.X / 2))
+                        {
+                            ball.velocity.Y *= -1;
+                            ball.location.Y = pLoc.Y - pSiz.Y - bSiz - 1;
+                            ball.velocity.X += forceX;
+                            return true;
+                        }
                     }
                 }
             }
@@ -180,6 +225,7 @@ class Paddle
         {
             // Dispatch Event
         }
+        return false;
     }
     render(canvas)
     {
@@ -189,6 +235,7 @@ class Paddle
 }
 let mainball;
 let paddle;
+let bricks = [];
 let gravity = 0.5;
 let MouseLocation = new Point(0, 0);
 let PreviousMouseLocation = new Point(0, 0);
@@ -203,8 +250,17 @@ function entry()
     mainball = new Ball(new Point(window.innerWidth / 2, 1), 10, new Color(0, 0, 0), 0, 1);
     mainball.velocity = new Point(0, 0);
     let paddleHeight = 20;
-    let paddlePadding = 10;
-    paddle = new Paddle(new Point(0, window.innerHeight - (paddleHeight / 2) - paddlePadding), new Point(130, paddleHeight), new Color(0, 0, 0));
+    let paddlePadding = 0;
+    paddle = new Brick(new Point(0, window.innerHeight - (paddleHeight / 2) - paddlePadding), new Point(250, paddleHeight), new Color(255, 0, 0));
+    paddle.moving = true;
+    for (let j = 0; j < 5; j++)
+    {
+        for (let i = 1; i < 5; i++)
+        {
+            bricks.push(new Brick(new Point((window.innerWidth / 2) - (135 * i) - 10, 300 + (j * 55)), new Point(130, 50), new Color(0, 0, 0)));
+            bricks.push(new Brick(new Point((window.innerWidth / 2) + (135 * i) + 10, 300 + (j * 55)), new Point(130, 50), new Color(0, 0, 0)));
+        }
+    }    
     window.addEventListener("mousemove", (e) =>
     {
         paddle.location.X = e.offsetX;
@@ -236,11 +292,20 @@ function update()
     mainball.move();
     previousLoc.push(mainball.location);
     paddle.collide(mainball, DeltaMouseLocation.X);
+    for (let i = bricks.length - 1; i >= 0; i--)
+    {
+        if (bricks[i].collide(mainball, 0))
+        {
+            bricks.splice(i, 1);
+        }    
+    }    
 }
 function render(canvas)
 {
-    mainball.render(canvas);
-    paddle.render(canvas);
+    for (let i = bricks.length - 1; i >= 0; i--)
+    {
+        bricks[i].render(canvas);
+    }
     for (let i = 0; i < previousLoc.length; i++)
     {
         canvas.drawCircle(previousLoc[i], 2, new Color(0, 0, 0));
@@ -248,5 +313,7 @@ function render(canvas)
     if (previousLoc.length > 100)
     {
         previousLoc.shift();
-    }    
+    }
+    mainball.render(canvas);
+    paddle.render(canvas);
 }
