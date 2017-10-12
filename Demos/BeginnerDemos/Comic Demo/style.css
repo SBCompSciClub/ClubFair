@@ -58,7 +58,7 @@ h2 {
     width: 780px;
     border:10px solid #2b2b2b;
     float: left;
-    background-color: white;
+    background-color: #000;
     overflow: hidden;
 }
 
@@ -68,7 +68,7 @@ h2 {
     width: 280px;
     border:10px solid #2b2b2b;
     float: left;
-    background-color: white;
+    background-color: #000;
     overflow: hidden;
 }
 
@@ -78,7 +78,7 @@ h2 {
     width: 480px;
     border:10px solid #2b2b2b;
     float: left;
-    background-color: white;
+    background-color: #000;
     overflow: hidden;
 }
 
@@ -88,7 +88,7 @@ h2 {
     width: 480px;
     border:10px solid #2b2b2b;
     float: left;
-    background-color: white;
+    background-color: #000;
     overflow: hidden;
 }
 
@@ -98,7 +98,7 @@ h2 {
     width: 280px;
     border:10px solid #2b2b2b;
     float: left;
-    background-color: white;
+    background-color: #000;
     overflow: hidden;
 }
 #panel6 {
@@ -107,7 +107,7 @@ h2 {
     width: 280px;
     border:10px solid #2b2b2b;
     float: left;
-    background-color: white;
+    background-color: #000;
     overflow: hidden;
 }
 #panel7 {
@@ -116,7 +116,7 @@ h2 {
     width: 480px;
     border:10px solid #2b2b2b;
     float: right;
-    background-color: white;
+    background-color: #000;
     overflow: hidden;
 }
 
@@ -145,6 +145,21 @@ h2 {
     background-color: #3694D2;
     line-height: 100%;
     margin: 20px;
+}
+
+.speech:after {
+    content: ' ';
+    width: 0;
+    height: 0;
+    left: 30px;
+    top: 100 px;
+    position: absolute;
+    border:10px solid;
+    border-color: #3694D2 transparent transparent #3694D2;
+}
+
+.end:after {
+    display: none;
 }
 
 /* Positioning of Text */
@@ -235,4 +250,22 @@ arrow {
 
 .infront{
     z-index: 3;
+}
+
+/* image styling */
+
+.panel img {
+    opacity: 0.5;
+    -webkit-transform: scale(1.15);
+    transform: scale(1.15);
+    -webkit-transition: opacity 0.5s, -webkit-transform 0.5s;
+    transition: opacity 0.5s, -webkit-transform 0.5s;
+    transition: transform 0.5s, opacity 0.5s;
+    transition: transform 0.5s, opacity 0.5s, -webkit-transform 0.5s;
+}
+
+.panel img:hover {
+    opacity: 1;
+    -webkit-transform: scale(1.03);
+    transform: scale(1.03);
 }

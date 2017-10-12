@@ -3,6 +3,8 @@ var canvas = document.querySelector('canvas');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 var c = canvas.getContext('2d');
+var mouse_x = 0;
+var mouse_y = 0;
 
 // function class
 
@@ -31,11 +33,12 @@ function Circle(x,y,dx,dy,radius){
 	this.update = function(){
 		if (this.x > innerWidth- this.radius || this.x < this.radius ){this.dx = -this.dx;}
 		if (this.y > innerHeight - this.radius || this.y < this.radius) {this.dy = -this.dy;}
-		this.x = this.x + this.dx
-		this.y = this.y + this.dy;
+        this.x = this.x + this.dx;
+        this.y = this.y + this.dy;
 	}
 
 }
+
 
 
 var circleArray = [] ;
