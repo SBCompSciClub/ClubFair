@@ -11,6 +11,9 @@ canvas{
 body{
     margin: 0;
     background-image: url("ocean.jpeg");
+    padding-right: 0;
+    border: 0;
+    background-size: 1536px 734px;
     background-repeat: no-repeat;
     background-attachment: fixed;
     z-index: -2;

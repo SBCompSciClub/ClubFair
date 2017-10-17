@@ -63,10 +63,3 @@ function animate(){
 }
 
 animate();
-
-
-
-
-
-
-
